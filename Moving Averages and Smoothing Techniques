@@ -1,0 +1,593 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime, timedelta
+import warnings
+warnings.filterwarnings('ignore')
+
+# Set up plotting style
+plt.style.use('seaborn-v0_8')
+plt.rcParams['figure.figsize'] = (12, 8)
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Create date range
+dates = pd.date_range(start='2020-01-01', end='2023-12-31', freq='D')
+
+# Generate synthetic stock price data with trend and seasonality
+trend = np.linspace(100, 200, len(dates))
+seasonal = 10 * np.sin(2 * np.pi * np.arange(len(dates)) / 365.25)
+noise = np.random.normal(0, 5, len(dates))
+price = trend + seasonal + noise
+
+# Create DataFrame
+df = pd.DataFrame({
+    'date': dates,
+    'price': price
+})
+
+# Set date as index
+df.set_index('date', inplace=True)
+
+plt.figure(figsize=(14, 6))
+plt.plot(df.index, df['price'], alpha=0.7, linewidth=1, label='Original Price')
+plt.title('Original Time Series Data', fontsize=16, fontweight='bold')
+plt.xlabel('Date', fontsize=12)
+plt.ylabel('Price', fontsize=12)
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+# Calculate different window sizes for moving averages
+windows = [7, 14, 30]  # 1 week, 2 weeks, 1 month
+
+for window in windows:
+    column_name = f'MA_{window}'
+    df[column_name] = df['price'].rolling(window=window).mean()
+    print(f"Created {window}-day moving average")
+
+print("\nDataFrame with moving averages:")
+print(df.head(35))  # Show first 35 rows to see how moving averages start
+
+# Calculate long-term moving averages
+long_windows = [90, 180, 365]  # 3 months, 6 months, 1 year
+
+for window in long_windows:
+    column_name = f'MA_{window}'
+    df[column_name] = df['price'].rolling(window=window).mean()
+    print(f"Created {window}-day moving average")
+
+print("\nColumns in DataFrame:")
+print(df.columns.tolist())
+
+plt.figure(figsize=(16, 10))
+
+# Plot original data
+plt.plot(df.index, df['price'], alpha=0.5, linewidth=0.8, 
+         label='Original Price', color='gray')
+
+# Plot short-term moving averages
+colors_short = ['blue', 'green', 'orange']
+for i, window in enumerate([7, 14, 30]):
+    plt.plot(df.index, df[f'MA_{window}'], 
+             linewidth=2, label=f'{window}-day MA', color=colors_short[i])
+
+# Plot long-term moving averages
+colors_long = ['red', 'purple', 'brown']
+for i, window in enumerate([90, 180, 365]):
+    plt.plot(df.index, df[f'MA_{window}'], 
+             linewidth=2.5, label=f'{window}-day MA', color=colors_long[i])
+
+plt.title('Price with Multiple Moving Averages', fontsize=16, fontweight='bold')
+plt.xlabel('Date', fontsize=12)
+plt.ylabel('Price', fontsize=12)
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+def exponential_smoothing(data, alpha):
+    """
+    Apply exponential smoothing to time series data
+    
+    Parameters:
+    data: pandas Series - time series data
+    alpha: float - smoothing parameter (0 < alpha <= 1)
+    
+    Returns:
+    pandas Series - exponentially smoothed data
+    """
+    result = np.zeros_like(data)
+    result[0] = data.iloc[0]  # Initialize with first value
+    
+    for i in range(1, len(data)):
+        result[i] = alpha * data.iloc[i] + (1 - alpha) * result[i-1]
+    
+    return pd.Series(result, index=data.index)
+
+# Apply exponential smoothing with different alpha values
+alphas = [0.1, 0.3, 0.5, 0.7, 0.9]
+
+for alpha in alphas:
+    column_name = f'EXP_{alpha}'
+    df[column_name] = exponential_smoothing(df['price'], alpha)
+    print(f"Created exponential smoothing with alpha = {alpha}")
+
+# Using pandas ewm (exponentially weighted moving average)
+spans = [10, 30, 60]  # Different span values
+
+for span in spans:
+    column_name = f'EWM_{span}'
+    df[column_name] = df['price'].ewm(span=span).mean()
+    print(f"Created EWM with span = {span}")
+
+print("\nAll columns in DataFrame:")
+print(df.columns.tolist())
+
+# Create subplots for better comparison
+fig, axes = plt.subplots(2, 1, figsize=(16, 12))
+
+# Plot 1: Custom exponential smoothing
+axes[0].plot(df.index, df['price'], alpha=0.5, linewidth=0.8, 
+             label='Original Price', color='gray')
+
+colors_exp = ['blue', 'green', 'orange', 'red', 'purple']
+for i, alpha in enumerate(alphas):
+    axes[0].plot(df.index, df[f'EXP_{alpha}'], 
+                 linewidth=2, label=f'Exp Smooth (α={alpha})', 
+                 color=colors_exp[i])
+
+axes[0].set_title('Custom Exponential Smoothing', fontsize=14, fontweight='bold')
+axes[0].set_ylabel('Price', fontsize=12)
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+# Plot 2: Pandas EWM
+axes[1].plot(df.index, df['price'], alpha=0.5, linewidth=0.8, 
+             label='Original Price', color='gray')
+
+colors_ewm = ['blue', 'green', 'red']
+for i, span in enumerate(spans):
+    axes[1].plot(df.index, df[f'EWM_{span}'], 
+                 linewidth=2, label=f'EWM (span={span})', 
+                 color=colors_ewm[i])
+
+axes[1].set_title('Pandas Exponentially Weighted Moving Average', 
+                  fontsize=14, fontweight='bold')
+axes[1].set_xlabel('Date', fontsize=12)
+axes[1].set_ylabel('Price', fontsize=12)
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+def calculate_smoothness_metrics(original, smoothed):
+    """
+    Calculate metrics to evaluate smoothing effectiveness
+    """
+    # Calculate variance reduction
+    original_var = original.var()
+    smoothed_var = smoothed.dropna().var()
+    variance_reduction = (original_var - smoothed_var) / original_var * 100
+    
+    # Calculate mean absolute deviation from trend
+    trend = np.linspace(original.iloc[0], original.iloc[-1], len(original))
+    original_mad = np.mean(np.abs(original - trend))
+    smoothed_mad = np.mean(np.abs(smoothed.dropna() - trend[:len(smoothed.dropna())]))
+    
+    return {
+        'variance_reduction': variance_reduction,
+        'original_variance': original_var,
+        'smoothed_variance': smoothed_var,
+        'original_mad': original_mad,
+        'smoothed_mad': smoothed_mad
+    }
+
+# Compare different smoothing methods
+methods_to_compare = ['MA_7', 'MA_30', 'MA_90', 'EXP_0.3', 'EWM_30']
+
+comparison_results = {}
+for method in methods_to_compare:
+    metrics = calculate_smoothness_metrics(df['price'], df[method])
+    comparison_results[method] = metrics
+
+# Display results in a formatted table
+results_df = pd.DataFrame(comparison_results).T
+
+# Create a focused comparison of selected methods
+fig, axes = plt.subplots(2, 2, figsize=(18, 12))
+
+# Select a subset of data for clearer visualization
+start_date = '2022-01-01'
+end_date = '2022-12-31'
+subset_df = df[start_date:end_date]
+
+methods_to_plot = [
+    ('MA_7', '7-day Moving Average'),
+    ('MA_30', '30-day Moving Average'),
+    ('EXP_0.3', 'Exponential Smoothing (α=0.3)'),
+    ('EWM_30', 'EWM (span=30)')
+]
+
+for i, (method, title) in enumerate(methods_to_plot):
+    row = i // 2
+    col = i % 2
+    
+    axes[row, col].plot(subset_df.index, subset_df['price'], 
+                       alpha=0.6, linewidth=1, label='Original', color='gray')
+    axes[row, col].plot(subset_df.index, subset_df[method], 
+                       linewidth=2, label=title, color='blue')
+    
+    axes[row, col].set_title(f'Original vs {title}', fontsize=12, fontweight='bold')
+    axes[row, col].set_ylabel('Price')
+    axes[row, col].legend()
+    axes[row, col].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# Calculate lag analysis
+def calculate_lag_metrics(original, smoothed):
+    """
+    Calculate how quickly smoothed series responds to changes
+    """
+    # Find significant price changes (> 2 standard deviations)
+    price_changes = original.diff().abs()
+    threshold = price_changes.mean() + 2 * price_changes.std()
+    significant_changes = price_changes > threshold
+    
+    # Calculate correlation with different lags
+    correlations = []
+    for lag in range(0, 10):
+        if lag == 0:
+            corr = original.corr(smoothed)
+        else:
+            corr = original[:-lag].corr(smoothed[lag:])
+        correlations.append(corr)
+    
+    return correlations
+
+# Analyze lag for different methods
+lag_analysis = {}
+for method in ['MA_7', 'MA_30', 'EXP_0.3', 'EWM_30']:
+    lag_analysis[method] = calculate_lag_metrics(df['price'], df[method])
+
+# Plot lag analysis
+plt.figure(figsize=(12, 6))
+for method, correlations in lag_analysis.items():
+    plt.plot(range(len(correlations)), correlations, 
+             marker='o', linewidth=2, label=method)
+
+plt.title('Lag Analysis: Correlation vs Lag Days', fontsize=14, fontweight='bold')
+plt.xlabel('Lag (days)')
+plt.ylabel('Correlation')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+# Create a comprehensive trend analysis
+fig, axes = plt.subplots(3, 1, figsize=(16, 14))
+
+# Plot 1: Original data with short-term trends
+axes[0].plot(df.index, df['price'], alpha=0.4, linewidth=0.8, 
+             label='Original Price', color='lightgray')
+axes[0].plot(df.index, df['MA_7'], linewidth=2, label='7-day MA (Short-term)', color='blue')
+axes[0].plot(df.index, df['MA_30'], linewidth=2, label='30-day MA (Medium-term)', color='green')
+
+axes[0].set_title('Short to Medium-term Trends', fontsize=14, fontweight='bold')
+axes[0].set_ylabel('Price')
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+# Plot 2: Long-term trends
+axes[1].plot(df.index, df['price'], alpha=0.4, linewidth=0.8, 
+             label='Original Price', color='lightgray')
+axes[1].plot(df.index, df['MA_90'], linewidth=2.5, label='90-day MA (Quarterly)', color='orange')
+axes[1].plot(df.index, df['MA_180'], linewidth=2.5, label='180-day MA (Semi-annual)', color='red')
+axes[1].plot(df.index, df['MA_365'], linewidth=3, label='365-day MA (Annual)', color='purple')
+
+axes[1].set_title('Long-term Trends', fontsize=14, fontweight='bold')
+axes[1].set_ylabel('Price')
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+# Plot 3: Trend comparison
+axes[2].plot(df.index, df['MA_7'], linewidth=1.5, label='Short-term (7-day)', color='blue')
+axes[2].plot(df.index, df['MA_30'], linewidth=2, label='Medium-term (30-day)', color='green')
+axes[2].plot(df.index, df['MA_90'], linewidth=2.5, label='Long-term (90-day)', color='orange')
+axes[2].plot(df.index, df['MA_365'], linewidth=3, label='Very Long-term (365-day)', color='purple')
+
+axes[2].set_title('Trend Comparison: Multiple Time Horizons', fontsize=14, fontweight='bold')
+axes[2].set_xlabel('Date')
+axes[2].set_ylabel('Price')
+axes[2].legend()
+axes[2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# Calculate trend strength for different time periods
+def calculate_trend_strength(data, window):
+    """
+    Calculate trend strength using linear regression slope
+    """
+    slopes = []
+    for i in range(window, len(data)):
+        y = data.iloc[i-window:i].values
+        x = np.arange(len(y))
+        slope = np.polyfit(x, y, 1)[0]
+        slopes.append(slope)
+    
+    return pd.Series(slopes, index=data.index[window:])
+
+# Calculate trend strength for different moving averages
+trend_strengths = {}
+for window in [7, 30, 90]:
+    ma_column = f'MA_{window}'
+    trend_strengths[f'Trend_{window}'] = calculate_trend_strength(df[ma_column].dropna(), 30)
+
+# Add trend strengths to dataframe
+for key, value in trend_strengths.items():
+    df[key] = value
+
+# Visualize trend strength
+plt.figure(figsize=(16, 8))
+
+for i, (key, _) in enumerate(trend_strengths.items()):
+    plt.subplot(2, 2, i+1)
+    plt.plot(df.index, df[key], linewidth=2, color=f'C{i}')
+    plt.axhline(y=0, color='black', linestyle='--', alpha=0.5)
+    plt.title(f'Trend Strength: {key}', fontsize=12, fontweight='bold')
+    plt.ylabel('Slope')
+    plt.grid(True, alpha=0.3)
+
+# Overall trend comparison
+plt.subplot(2, 2, 4)
+for i, (key, _) in enumerate(trend_strengths.items()):
+    plt.plot(df.index, df[key], linewidth=2, label=key, color=f'C{i}')
+
+plt.axhline(y=0, color='black', linestyle='--', alpha=0.5)
+plt.title('Trend Strength Comparison', fontsize=12, fontweight='bold')
+plt.ylabel('Slope')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# Create a summary analysis of trends
+def analyze_trends(df):
+    """
+    Provide comprehensive trend analysis
+    """
+    analysis = {}
+    
+    # Overall trend (using longest MA)
+    start_price = df['MA_365'].dropna().iloc[0]
+    end_price = df['MA_365'].dropna().iloc[-1]
+    overall_trend = "Upward" if end_price > start_price else "Downward"
+    trend_magnitude = ((end_price - start_price) / start_price) * 100
+    
+    analysis['overall_trend'] = overall_trend
+    analysis['trend_magnitude'] = trend_magnitude
+    
+    # Volatility analysis
+    short_term_vol = df['MA_7'].dropna().std()
+    long_term_vol = df['MA_365'].dropna().std()
+    volatility_ratio = short_term_vol / long_term_vol
+    
+    analysis['short_term_volatility'] = short_term_vol
+    analysis['long_term_volatility'] = long_term_vol
+    analysis['volatility_ratio'] = volatility_ratio
+    
+    # Recent trend (last 90 days)
+    recent_data = df.tail(90)
+    recent_start = recent_data['MA_30'].dropna().iloc[0]
+    recent_end = recent_data['MA_30'].dropna().iloc[-1]
+    recent_trend = "Upward" if recent_end > recent_start else "Downward"
+    recent_magnitude = ((recent_end - recent_start) / recent_start) * 100
+    
+    analysis['recent_trend'] = recent_trend
+    analysis['recent_magnitude'] = recent_magnitude
+    
+    return analysis
+
+# Perform trend analysis
+trend_analysis = analyze_trends(df)
+
+# Interpretation
+print("\nINTERPRETATION:")
+print("-" * 20)
+if trend_analysis['volatility_ratio'] > 2:
+    print("• High short-term volatility relative to long-term trend")
+elif trend_analysis['volatility_ratio'] < 1.5:
+    print("• Relatively stable price movement")
+else:
+    print("• Moderate volatility levels")
+
+if abs(trend_analysis['recent_magnitude']) > abs(trend_analysis['trend_magnitude']) * 0.1:
+    print("• Recent trend shows significant deviation from overall trend")
+else:
+    print("• Recent trend aligns with overall direction")
+
+# Generate trading signals based on moving average crossovers
+def generate_trading_signals(df):
+    """
+    Generate buy/sell signals based on moving average crossovers
+    """
+    signals = pd.DataFrame(index=df.index)
+    signals['price'] = df['price']
+    signals['short_ma'] = df['MA_30']
+    signals['long_ma'] = df['MA_90']
+    
+    # Generate signals
+    signals['signal'] = 0
+    signals['signal'][30:] = np.where(
+        signals['short_ma'][30:] > signals['long_ma'][30:], 1, 0
+    )
+    
+    # Generate trading orders
+    signals['positions'] = signals['signal'].diff()
+    
+    return signals
+
+# Generate and visualize trading signals
+signals = generate_trading_signals(df)
+
+plt.figure(figsize=(16, 8))
+
+# Plot price and moving averages
+plt.plot(signals.index, signals['price'], alpha=0.6, linewidth=1, 
+         label='Price', color='black')
+plt.plot(signals.index, signals['short_ma'], linewidth=2, 
+         label='30-day MA', color='blue')
+plt.plot(signals.index, signals['long_ma'], linewidth=2, 
+         label='90-day MA', color='red')
+
+# Plot buy signals
+buy_signals = signals[signals['positions'] == 1]
+plt.scatter(buy_signals.index, buy_signals['price'], 
+           color='green', marker='^', s=100, label='Buy Signal')
+
+# Plot sell signals
+sell_signals = signals[signals['positions'] == -1]
+plt.scatter(sell_signals.index, sell_signals['price'], 
+           color='red', marker='v', s=100, label='Sell Signal')
+
+plt.title('Trading Signals Based on Moving Average Crossover', 
+          fontsize=14, fontweight='bold')
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+print(f"Generated {len(buy_signals)} buy signals and {len(sell_signals)} sell signals")
+
+# Evaluate the performance of different smoothing methods
+def evaluate_smoothing_performance(original, smoothed_methods):
+    """
+    Evaluate different smoothing methods using multiple metrics
+    """
+    results = {}
+    
+    for method_name, smoothed_data in smoothed_methods.items():
+        # Remove NaN values
+        valid_data = smoothed_data.dropna()
+        original_aligned = original.loc[valid_data.index]
+        
+        # Calculate metrics
+        mse = np.mean((original_aligned - valid_data) ** 2)
+        mae = np.mean(np.abs(original_aligned - valid_data))
+        
+        # Signal-to-noise ratio improvement
+        original_std = original_aligned.std()
+        smoothed_std = valid_data.std()
+        snr_improvement = (original_std - smoothed_std) / original_std * 100
+        
+        # Trend preservation (correlation with linear trend)
+        trend = np.linspace(original_aligned.iloc[0], original_aligned.iloc[-1], 
+                           len(original_aligned))
+        trend_corr_original = np.corrcoef(original_aligned, trend)[0, 1]
+        trend_corr_smoothed = np.corrcoef(valid_data, trend)[0, 1]
+        trend_preservation = trend_corr_smoothed / trend_corr_original * 100
+        
+        results[method_name] = {
+            'MSE': mse,
+            'MAE': mae,
+            'SNR_Improvement': snr_improvement,
+            'Trend_Preservation': trend_preservation
+        }
+    
+    return results
+
+# Evaluate different methods
+methods_to_evaluate = {
+    'MA_7': df['MA_7'],
+    'MA_30': df['MA_30'],
+    'MA_90': df['MA_90'],
+    'EXP_0.3': df['EXP_0.3'],
+    'EWM_30': df['EWM_30']
+}
+
+performance_results = evaluate_smoothing_performance(df['price'], methods_to_evaluate)
+
+# Display results
+performance_df = pd.DataFrame(performance_results).T
+print("SMOOTHING METHODS PERFORMANCE EVALUATION")
+print("=" * 60)
+print(performance_df.round(4))
+
+# Create performance visualization
+fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+
+metrics = ['MSE', 'MAE', 'SNR_Improvement', 'Trend_Preservation']
+titles = ['Mean Squared Error (Lower is Better)', 
+          'Mean Absolute Error (Lower is Better)',
+          'Signal-to-Noise Ratio Improvement (%)', 
+          'Trend Preservation (%)']
+
+for i, (metric, title) in enumerate(zip(metrics, titles)):
+    row = i // 2
+    col = i % 2
+    
+    values = [performance_results[method][metric] for method in methods_to_evaluate.keys()]
+    methods = list(methods_to_evaluate.keys())
+    
+    bars = axes[row, col].bar(methods, values, color=['blue', 'green', 'orange', 'red', 'purple'])
+    axes[row, col].set_title(title, fontsize=12, fontweight='bold')
+    axes[row, col].set_ylabel(metric)
+    axes[row, col].tick_params(axis='x', rotation=45)
+    
+    # Add value labels on bars
+    for bar, value in zip(bars, values):
+        height = bar.get_height()
+        axes[row, col].text(bar.get_x() + bar.get_width()/2., height,
+                           f'{value:.2f}', ha='center', va='bottom')
+
+plt.tight_layout()
+plt.show()
+
+'''Troubleshooting Tips
+Common Issues and Solutions
+Issue 1: NaN values in moving averages
+
+Cause: Moving averages cannot be calculated for the first n-1 data points where n is the window size
+Solution: Use .dropna() when analyzing or plotting moving averages
+Issue 2: Memory issues with large datasets
+
+Cause: Creating multiple moving averages on large datasets
+Solution: Process data in chunks or use more efficient methods like rolling().mean()
+Issue 3: Plotting issues with different length series
+
+Cause: Moving averages have different starting points due to window sizes
+Solution: Align indices when plotting or use df.dropna() for the entire dataframe
+Issue 4: Exponential smoothing not working as expected
+
+Cause: Incorrect alpha parameter or initialization
+Solution: Ensure alpha is between 0 and 1, and initialize properly with first data point
+Performance Optimization Tips
+# Efficient way to calculate multiple moving averages
+def calculate_multiple_mas_efficiently(data, windows):
+    """
+    Efficiently calculate multiple moving averages
+    """
+    result = pd.DataFrame(index=data.index)
+    result['original'] = data
+    
+    for window in windows:
+        result[f'MA_{window}'] = data.rolling(window=window, min_periods=1).mean()
+    
+    return result
+
+# Example usage
+efficient_mas = calculate_multiple_mas_efficiently(df['price'], [7, 14, 30, 60, 90])
+print("Efficiently calculated moving averages:")
+print(efficient_mas.head())'''
+
