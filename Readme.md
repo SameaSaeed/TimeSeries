@@ -280,21 +280,18 @@ Identifying Whit Noise and Random Walk:
    
 
 1. Handling Missing Values:
-   Imputation with mean, median, mode, forward fill, backward fill
-   Interpolation with linear, spline, and polynomial
-   Predictive Modelling with Machine Learning
+   a. Imputation with mean, median, mode, forward fill, backward fill
+   b. Interpolation with linear, spline, and polynomial
+   c. Predictive Modelling with Machine Learning
 2. Making Data Stationary
 3. Handling Outliers
-   Imputation
-   Interpolation
-   Transformation
-   Smoothing
+   a. Imputation
+   b. Interpolation
+   c. Transformation
+   d. Smoothing
 4. Resampling (frequency= hourly, daily, monthly, quarterly, yearly); Interpolation fills the gaps
-
-      Down-sampling
-
-      Up-sampling
-
+   a. Down-sampling
+   b. Up-sampling
    
 
    ##### **Time Series Forecasting**
