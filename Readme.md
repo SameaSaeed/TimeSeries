@@ -119,7 +119,7 @@ This model is appropriate when the seasonal fluctuations or the variation around
 
 
 
-For example, if you have a time series of monthly sales data for a product, and the seasonal peaks and troughs remain relatively consistent in magnitude over time, even as the overall sales trend increases, an additive model might be suitable.
+For example, if you have a time series of monthly sales data for a product, and the **seasonal peaks and troughs remain relatively consistent **in magnitude over time, even as the overall sales trend increases, an additive model might be suitable.
 
 
 
@@ -143,7 +143,7 @@ For example, if you have a time series of website traffic, where the peaks durin
 
 
 
-A multiplicative trend indicates a non-linear trend (curved trend line), and a multiplicative seasonality indicates increasing/decreasing frequency (width) and/or amplitude (height) of seasonal cycles, according to a blog post on Towards Data Science.
+A multiplicative trend indicates a non-linear trend (curved trend line), and a multiplicative seasonality indicates increasing/decreasing frequency (width) and/or amplitude (height) of seasonal cycles.
 
 
 
@@ -157,7 +157,7 @@ If the magnitude of seasonal variations remains constant regardless of the level
 
 
 
-If the magnitude of seasonal variations changes proportionally with the level of the time series, a multiplicative model is more appropriate (exponential).
+If the magnitude of **seasonal variations changes proportionally with the level of the time series**, a multiplicative model is more appropriate (exponential).
 
 
 
