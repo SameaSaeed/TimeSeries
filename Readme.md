@@ -338,7 +338,7 @@ Identifying Whit Noise and Random Walk:
 
    Strengths:
 
-   Designed for business time series with strong seasonality and holiday effects, user-friendly, handles missing data and outliers well, requires less hyperparameter tuning than ARIMA, according to Meta Open Source.
+   Designed for business time series with strong seasonality and holiday effects, user-friendly, handles missing data and outliers well, requires less hyperparameter tuning than ARIMA.
 
    
 
@@ -372,7 +372,7 @@ Identifying Whit Noise and Random Walk:
 
    Use Cases:
 
-   Financial time series with complex patterns, weather forecasting, healthcare data analysis, and other scenarios where traditional methods may not be sufficient, according to Alibaba Cloud.
+   Financial time series with complex patterns, weather forecasting, healthcare data analysis, and other scenarios where traditional methods may not be sufficient.
 
    
 
