@@ -308,11 +308,21 @@ Identifying Whit Noise and Random Walk:
 
    ARMA (Combination of AR and MA, and chosen when both ACF and PACF plots decay)
 
+   ACF (Autocorrelation Function) and PACF (Partial Autocorrelation Function) are essential tools in time series analysis used to understand the relationships between          observations in a time series and their lags (past values). Both ACF and PACF help in identifying the order of AR (Autoregressive) and MA (Moving Average) components in     time series models like ARMA and ARIMA.
+   ACF is useful for identifying the MA (Moving Average) order. It shows the correlation at all lags, including indirect effects.
+   PACF is useful for identifying the AR (Autoregressive) order. It shows the direct correlation at each lag, controlling for the influence of intermediate lags.
+
+   Autoregressive (AR) model is a linear model where the current value of the series is regressed on its past values. AR(p) represents the order of the autoregression,        indicating how many past values influence the current value.
+   
+   MA model expresses the current value of the time series as a linear combination of the past error terms (or residuals). MA(q): The MA model of order q (denoted as MA(q))    uses the past q error terms to model the time series. The term "moving average" refers to the fact that the model averages over a window of previous errors, thus            "smoothing" the series.
+
    ARIMA, SARIMA (univariate)
+
+   The ARIMA model extends ARMA to handle non-stationary data by introducing an integration component (differencing), which transforms non-stationary series into stationary    series.
+   The SARIMA model extends ARIMA to handle seasonality in time series data by introducing seasonal autoregressive (SAR), seasonal moving average (SMA), and seasonal           differencing (SD) components.
 
    VARMA (multi-variate)
 
-   
 
    Strengths:
 
