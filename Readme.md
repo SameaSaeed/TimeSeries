@@ -226,14 +226,14 @@ The Kolmogorov-Smirnov (K-S) test is a nonparametric statistical test used to de
 
 
 1. Differentiation: 2nd order
-2. Transformation: Stabilizes the variance of time series data
-   Logarithmic
-   Power
+2. Transformation: Stabilizes the variance of time series data:
+   Logarithmic,
+   Power,
    Box-cox
-3. Detrending: Removing trend component
-   Linear
+3. Detrending: Removing trend component:
+   Linear,
    Moving average
-4. Seasonal Adjustment: Removing seasonal component
+4. Seasonal Adjustment: Removing seasonal component:
    STL Decomposition
 
 
@@ -242,11 +242,11 @@ The Kolmogorov-Smirnov (K-S) test is a nonparametric statistical test used to de
 
 
 
-White Noise: Completely random and unpredictable with no pattern, trend, or seasonality, along with constant mean and variance and no auto-correlation, for eg. coin tossing
+White Noise: Completely random and unpredictable with no pattern, trend, or seasonality, along with constant mean and variance and no auto-correlation, for eg. signal processing
 
 
 
-Random Walk: A Cumulative pattern with mean and variance changing over time and a stationary 1st order difference leading to no predictable pattern.
+Random Walk: A Cumulative pattern with mean and variance changing over time and a stationary 1st order difference leading to no predictable pattern. fo eg. financial modelling
 
 
 
